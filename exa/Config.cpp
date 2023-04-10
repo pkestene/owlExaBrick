@@ -15,6 +15,7 @@
 // ======================================================================== //
 
 #include <fstream>
+#include <cstring> // for std::strtok
 
 #include "exa/Config.h"
 
@@ -33,11 +34,11 @@ namespace exa {
     affine3f voxelSpaceCoordSys
       = affine3f::translate(voxelSpaceBounds.lower)
       * affine3f::scale(voxelSpaceBounds.span());
-      
+
     affine3f worldSpaceCoordSys
       = affine3f::translate(worldSpaceBounds.lower)
       * affine3f::scale(worldSpaceBounds.span());
-      
+
     bricks.voxelSpaceTransform
       = voxelSpaceCoordSys
       * rcp(worldSpaceCoordSys);
@@ -61,16 +62,16 @@ namespace exa {
     std::cout << "opening config file "
               << fileName << std::endl;
     FILE *file = fopen(fileName.c_str(),"r");
-      
+
     if (!file)
       throw std::runtime_error("error in opening config file '"+fileName+"'");
-      
+
     static const int LINE_SZ = 10000;
     char line[LINE_SZ+1];
     // std::deque<std::string> tokens;
     std::vector<std::string> tokens;
     while (fgets(line,LINE_SZ,file) && !feof(file)) {
-      char *tok = strtok(line," \t\n\r");
+      char *tok = std::strtok(line," \t\n\r");
       while (tok && tok[0] != '#') {
         tokens.push_back(tok);
         tok = strtok(NULL," \t\n\r");
@@ -95,7 +96,7 @@ namespace exa {
         it += 7;
         continue;
       }
-        
+
       if (*it == "remap_to") {
         config->bricks.remap_to.lower = vec3f(std::stof(it[+1]),
                                               std::stof(it[+2]),
@@ -106,7 +107,7 @@ namespace exa {
         it += 7;
         continue;
       }
-        
+
       if (*it == "scalar") {
         const std::string scalarName = it[+1];
 
@@ -129,7 +130,7 @@ namespace exa {
 
         continue;
       }
-        
+
       if (*it == "vector") {
         const std::string fieldName = it[+1];
         const std::string fnx = basePath+it[2];
@@ -140,19 +141,19 @@ namespace exa {
 
         continue;
       }
-        
+
       if (*it == "value_range") {
         float lo = std::stof(it[+1]);
         float hi = std::stof(it[+2]);
         it += 3;
-          
+
         assert(!config->scalarFields.empty());
         config->scalarFields.back()->valueRange.lower = lo;
         config->scalarFields.back()->valueRange.upper = hi;
 
         continue;
       }
-        
+
 
       if (*it == "bricks") {
         std::string fileName = basePath+it[+1];
@@ -175,8 +176,8 @@ namespace exa {
 
 
     config->finalize();
-      
+
     return config;
   }
-  
+
 } // ::exa

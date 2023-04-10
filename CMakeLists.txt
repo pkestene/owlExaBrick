@@ -14,9 +14,14 @@
 # limitations under the License.                                           #
 # ======================================================================== #
 
-project(ExaJet)
+cmake_minimum_required(VERSION 3.12)
 
-cmake_minimum_required(VERSION 2.8)
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
+  cmake_policy(SET CMP0104 NEW)
+endif()
+
+project(ExaJet
+  LANGUAGES C CXX CUDA)
 
 # ------------------------------------------------------------------
 # first, include owl project to do some general configuration stuff
@@ -29,7 +34,6 @@ add_subdirectory(${owl_dir} EXCLUDE_FROM_ALL)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${owl_dir}/owl/cmake/")
 include_directories(${OWL_INCLUDES})
 
-include(configure_cuda)
 
 
 
@@ -90,12 +94,20 @@ add_executable(exaBuilder
   )
 target_link_libraries(exaBuilder
   ${TBB_LIBRARIES}
-  ${OWL_LIBRARIES}
-  ${OWL_VIEWER_LIBRARIES}
+  owl::owl
+  owl_viewer
 )
 
-cuda_compile_and_embed(
-  ptxCode programs/exabrick.cu
+include(embed_ptx)
+embed_ptx(
+  OUTPUT_TARGET
+    exaViewer-ptx
+  EMBEDDED_SYMBOL_NAMES
+    ptxCode
+  PTX_LINK_LIBRARIES
+    owl::owl
+  SOURCES
+    programs/exabrick.cu
   )
 add_executable(exaViewer
   glutViewer/Camera.cpp
@@ -112,13 +124,13 @@ add_executable(exaViewer
   exa/Regions.cpp
   exa/Texture.cpp
   exa/ColorMapper.cpp
-  ${ptxCode}
+  exaViewer-ptx
   )
 target_link_libraries(exaViewer
   glui_static
 
-  ${OWL_LIBRARIES}
-  ${OWL_VIEWER_LIBRARIES}
+  owl::owl
+  owl_viewer
   ${TBB_LIBRARIES}
   ${GLUT_LIBRARIES}
   ${OPENGL_LIBRARIES}
@@ -133,7 +145,7 @@ add_executable(exaRawToCells
   )
 target_link_libraries(exaRawToCells
   ${TBB_LIBRARIES}
-  ${OWL_LIBRARIES}
+  owl::owl
   )
 
 
